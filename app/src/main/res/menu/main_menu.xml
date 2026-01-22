@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_download"
+        android:title="@string/download_episodes" />
+    <item
+        android:id="@+id/action_podcasts"
+        android:title="@string/podcasts" />
+    <item
+        android:id="@+id/action_episodes"
+        android:title="@string/episodes" />
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/settings" />
+    <item
+        android:id="@+id/action_import_opml"
+        android:title="@string/import_opml" />
+    <item
+        android:id="@+id/action_exit"
+        android:title="@string/exit" />
+</menu>
+

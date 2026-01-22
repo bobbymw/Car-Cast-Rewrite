@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/BaseActivityLayout"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/tvPodcast"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:background="#c7cbd7"
+        android:ellipsize="none"
+        android:singleLine="true"
+        android:text=""
+        android:textColor="#000"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvPubDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:textColor="#FFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp"
+        android:text=""
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPodcast" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#FFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPubDate" />
+
+    <ImageButton
+        android:id="@+id/btnPrevious"
+        android:layout_width="64dp"
+        android:layout_height="70dp"
+        android:contentDescription="@string/previous"
+        android:src="@drawable/player_65_previous"
+        android:background="#000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnPlayPause"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread_inside" />
+
+    <ImageButton
+        android:id="@+id/btnRewind"
+        android:layout_width="65dp"
+        android:layout_height="85dp"
+        android:contentDescription="@string/rewind"
+        android:src="@drawable/player_65_bump_left"
+        android:background="#000"
+        app:layout_constraintBottom_toTopOf="@id/btnPrevious"
+        app:layout_constraintStart_toStartOf="@id/btnPrevious" />
+
+    <ImageButton
+        android:id="@+id/btnPlayPause"
+        android:layout_width="102dp"
+        android:layout_height="140dp"
+        android:contentDescription="@string/pausePlay"
+        android:src="@drawable/player_102_play"
+        android:background="#000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnNext"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/btnPrevious" />
+
+    <ImageButton
+        android:id="@+id/btnNext"
+        android:layout_width="65dp"
+        android:layout_height="70dp"
+        android:contentDescription="@string/next"
+        android:src="@drawable/player_65_next"
+        android:background="#000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnPlayPause"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5" />
+
+    <ImageButton
+        android:id="@+id/btnForward"
+        android:layout_width="65dp"
+        android:layout_height="85dp"
+        android:contentDescription="@string/forward"
+        android:background="#000"
+        app:layout_constraintEnd_toEndOf="@id/btnNext"
+        app:layout_constraintBottom_toTopOf="@id/btnNext"
+        android:src="@drawable/player_65_bump_right" />
+
+    <TextView
+        android:id="@+id/tvPosition"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:text="XX:XX"
+        android:textColor="#FFF"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@id/btnPlayPause"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tvEpisodeNumber"
+        tools:ignore="Autofill,HardcodedText"  />
+
+    <TextView
+        android:id="@+id/tvEpisodeNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:text="XX/XX"
+        android:textColor="#FFF"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@id/btnPlayPause"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/tvPosition"
+        app:layout_constraintEnd_toStartOf="@id/tvDuration"
+        tools:ignore="Autofill,HardcodedText" />
+
+    <TextView
+        android:id="@+id/tvDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:text="XX:XX"
+        android:textColor="#FFF"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@id/btnPlayPause"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/tvEpisodeNumber"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="Autofill,HardcodedText"  />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:max="100"
+        android:progress="0"
+        android:scrollbarAlwaysDrawHorizontalTrack="true"
+        android:scrollbarStyle="insideOverlay"
+        android:secondaryProgress="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvEpisodeNumber"  />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

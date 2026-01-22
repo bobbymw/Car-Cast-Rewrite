@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_toggle_enable_podcast"
+        android:title="@string/disable_podcast" />
+
+    <item
+        android:id="@+id/menu_edit_podcast"
+        android:title="@string/edit_podcast" />
+
+    <item
+        android:id="@+id/menu_download_podcast"
+        android:title="@string/download_episodes" />
+
+    <item
+        android:id="@+id/menu_delete_episodes"
+        android:title="@string/delete_episodes" />
+
+    <item
+        android:id="@+id/menu_delete_podcast"
+        android:title="@string/delete" />
+
+</menu>

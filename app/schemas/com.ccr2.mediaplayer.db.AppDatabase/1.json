@@ -1,0 +1,171 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "8f1cc711969e2c5df1e8f83f5f67ac5f",
+    "entities": [
+      {
+        "tableName": "podcast_metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `url` TEXT NOT NULL, `maxDownloads` INTEGER NOT NULL, `isActive` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxDownloads",
+            "columnName": "maxDownloads",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_podcast_metadata_url",
+            "unique": true,
+            "columnNames": [
+              "url"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_podcast_metadata_url` ON `${TABLE_NAME}` (`url`)"
+          }
+        ]
+      },
+      {
+        "tableName": "episode_metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `podcastName` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `enclosureUrl` TEXT NOT NULL, `pubDateMillis` INTEGER NOT NULL, `audioFileName` TEXT, `mimeType` TEXT, `contentLength` INTEGER NOT NULL, `currentPos` INTEGER NOT NULL, `duration` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `isListenedTo` INTEGER NOT NULL, `useForHistory` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "podcastName",
+            "columnName": "podcastName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enclosureUrl",
+            "columnName": "enclosureUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pubDateMillis",
+            "columnName": "pubDateMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "audioFileName",
+            "columnName": "audioFileName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mimeType",
+            "columnName": "mimeType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contentLength",
+            "columnName": "contentLength",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentPos",
+            "columnName": "currentPos",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isListenedTo",
+            "columnName": "isListenedTo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "useForHistory",
+            "columnName": "useForHistory",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_episode_metadata_enclosureUrl",
+            "unique": true,
+            "columnNames": [
+              "enclosureUrl"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_episode_metadata_enclosureUrl` ON `${TABLE_NAME}` (`enclosureUrl`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8f1cc711969e2c5df1e8f83f5f67ac5f')"
+    ]
+  }
+}

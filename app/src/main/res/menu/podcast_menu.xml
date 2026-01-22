@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_reset_to_demos"
+        android:title="@string/reset_to_demos" />
+    <item
+        android:id="@+id/action_export_opml"
+        android:title="@string/export_opml" />
+    <item
+        android:id="@+id/action_import_opml"
+        android:title="@string/import_opml" />
+    <item
+        android:id="@+id/action_podcast_search"
+        android:title="@string/search" />
+    <item
+        android:id="@+id/action_add_podcast"
+        android:title="@string/add" />
+    <item
+        android:id="@+id/action_delete_all_podcasts"
+        android:title="@string/delete_all" />
+</menu>
+
