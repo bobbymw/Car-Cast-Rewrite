@@ -1,8 +1,9 @@
 *.iml
 /.gradle/
 /.idea/
-/build/
+/*/build/
 /gradle/
 /*/tmp/
 /local.properties
 !/gradle/wrapper/
+/build/
