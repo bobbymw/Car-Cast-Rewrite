@@ -32,6 +32,7 @@ import com.weinmann.ccr.services.MediaPlayerService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class EpisodesActivity extends AppCompatActivity {
 
@@ -176,7 +177,8 @@ public class EpisodesActivity extends AppCompatActivity {
                 episodes.addAll(newEpisodes);
             }
             adapter.notifyDataSetChanged();
-            Log.d(TAG, "Active episodes updated: " + newEpisodes.size());
+            Log.d(TAG, String.format(Locale.getDefault(), "Active episodes updated: %d",
+                    newEpisodes == null ? 0 : newEpisodes.size()));
         });
     }
 

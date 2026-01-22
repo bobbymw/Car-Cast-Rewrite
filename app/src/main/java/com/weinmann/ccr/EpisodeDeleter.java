@@ -1,7 +1,6 @@
 package com.weinmann.ccr;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -15,7 +14,7 @@ import java.util.function.Predicate;
 
 @SuppressWarnings("ClassCanBeRecord")
 public class EpisodeDeleter {
-    private static String TAG = "EpisodeDeleter";
+    private final static String TAG = "EpisodeDeleter";
     private final Activity activity;
 
     public EpisodeDeleter(Activity activity) {
