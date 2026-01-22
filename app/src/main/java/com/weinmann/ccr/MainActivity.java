@@ -136,11 +136,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupClickListeners() {
         btnPlayPause.setOnClickListener(v -> {
             if (isServiceBound && mediaPlayerService != null) {
-                if (mediaPlayerService.isPlaying()) {
-                    mediaPlayerService.pause();
-                } else {
-                    mediaPlayerService.play();
-                }
+                mediaPlayerService.playPause(!mediaPlayerService.isPlaying());
                 updateUI();
             }
         });

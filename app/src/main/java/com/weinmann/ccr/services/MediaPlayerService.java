@@ -1,28 +1,27 @@
 package com.weinmann.ccr.services;
 
-import com.weinmann.ccr.CcrApplication;
-import com.weinmann.ccr.CurrentItemList;
-import com.weinmann.ccr.db.AppDatabase;
-import com.weinmann.ccr.db.EpisodeMetadataDao;
-import com.weinmann.ccr.records.*;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import androidx.lifecycle.Observer;
-import androidx.media3.common.*;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 
-import android.support.v4.media.session.MediaSessionCompat;
+import com.weinmann.ccr.CcrApplication;
+import com.weinmann.ccr.CurrentItemList;
+import com.weinmann.ccr.db.AppDatabase;
+import com.weinmann.ccr.db.EpisodeMetadataDao;
+import com.weinmann.ccr.records.EpisodeMetadata;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.File;
 import java.util.List;
 
 public class MediaPlayerService extends Service implements IMediaPlayerService {
@@ -73,11 +72,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         if (intent != null) {
             String action = intent.getAction();
             if ("ACTION_PLAY_PAUSE".equals(action)) {
-                if (isPlaying()) {
-                    pause();
-                } else {
-                    play();
-                }
+                playPause(!isPlaying());
             } else if ("ACTION_PREVIOUS".equals(action)) {
                 setEpisodeIndex(episodes.getCurrentIndex() - 1, isPlaying());
             } else if ("ACTION_NEXT".equals(action)) {
@@ -97,32 +92,18 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     }
 
     @Override
-    public void play() {
-        if (isPlaying() || getCurrentEpisode() == null) return;
-        if (player == null) {
-            initializePlayer();
-        }
-        float playbackSpeed = getPlaybackSpeed();
-        player.setPlaybackSpeed(playbackSpeed);
-        player.play();
-    }
-
-    @Override
-    public void pause() {
-        if (isPlaying() && getCurrentEpisode() != null) {
-            player.pause();
+    public void playPause(boolean shouldPlay) {
+        if (shouldPlay) {
+            play();
+        } else {
+            pause();
         }
     }
 
     @Override
     public void setEpisodeIndex(int index, boolean shouldPlay) {
         if (index == getCurrentEpisodeIndex()) {
-            if (shouldPlay) {
-                play();
-            } else {
-                pause();
-            }
-
+            playPause(shouldPlay);
             return;
         }
 
@@ -140,8 +121,9 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 if (getCurrentEpisode().currentPos() >= getCurrentEpisode().duration()) {
                     updateAndSaveCurrentEpisodePosition(0); // because we specifically want to play this episode again
                 }
-                play();
             }
+
+            playPause(shouldPlay);
         }
     }
 
@@ -195,6 +177,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
     @Override
     public void seekTo(int position) {
+        boolean wasPlaying = isPlaying();
         if (position < 0) position = 0;
         if (position >= getDuration()) position = getDuration() - 1;
 
@@ -205,6 +188,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         }
 
         updateAndSaveCurrentEpisodePosition(position);
+        playPause(wasPlaying);
     }
 
     @Override
@@ -238,10 +222,28 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         }
     }
 
+    private void play() {
+        if (isPlaying() || getCurrentEpisode() == null) return;
+        if (player == null) {
+            initializePlayer();
+        }
+        float playbackSpeed = getPlaybackSpeed();
+        player.setPlaybackSpeed(playbackSpeed);
+        player.play();
+    }
+
+    private void pause() {
+        if (isPlaying() && getCurrentEpisode() != null) {
+            player.pause();
+        }
+    }
+
     private void setEpisodeById(long id, boolean shouldPlay) {
         int index = episodes.indexOf(e -> e.id() == id);
         if (index < 0) {
-            pause();
+            if (isPlaying()) {
+                killMediaPlayer();
+            }
             return;
         }
 
@@ -253,15 +255,15 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             return;
         }
 
-        boolean shouldPlay = isPlaying();
+        boolean wasPlaying = isPlaying();
         SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
         long lastEpisodeId = prefs.getLong(CcrApplication.KEY_LAST_EPISODE_ID, 0L);
 
         episodes.removeIf(episode ->
-                (episode.uriString() == null) ||
-                !doesAudioFileExist(episode.uriString()));
+                (episode.audioAbsolutePath() == null) ||
+                !new File(episode.audioAbsolutePath()).exists());
 
-        setEpisodeById(lastEpisodeId, shouldPlay);
+        setEpisodeById(lastEpisodeId, wasPlaying);
     }
 
     private void updateMediaSessionMetadata() {
@@ -332,11 +334,11 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             }
         });
 
-        Log.d(TAG, "Loading audio from: " + getCurrentEpisode().audioFileName());
+        Log.d(TAG, "Loading audio from: " + getCurrentEpisode().audioAbsolutePath());
 
         MediaItem mediaItem =
                 new MediaItem.Builder()
-                        .setUri(getCurrentEpisode().uriString())
+                        .setUri(getCurrentEpisode().audioAbsolutePath())
                         .build();
 
         player.setMediaItem(mediaItem);
@@ -386,15 +388,6 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
             player.release();
             player = null;
-        }
-    }
-
-    private boolean doesAudioFileExist(String uriString) {
-        Uri uri = Uri.parse(uriString);
-        try (InputStream ignored = getContentResolver().openInputStream(uri)) {
-            return true;
-        } catch (IOException e) {
-            return false;
         }
     }
 }

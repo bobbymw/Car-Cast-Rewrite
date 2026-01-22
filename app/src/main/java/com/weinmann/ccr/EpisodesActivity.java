@@ -172,7 +172,9 @@ public class EpisodesActivity extends AppCompatActivity {
 
         dao.getObservable().observe(this, newEpisodes -> {
             episodes.clear();
-            episodes.addAll(newEpisodes);
+            if (newEpisodes != null && !newEpisodes.isEmpty()) {
+                episodes.addAll(newEpisodes);
+            }
             adapter.notifyDataSetChanged();
             Log.d(TAG, "Active episodes updated: " + newEpisodes.size());
         });

@@ -19,10 +19,10 @@ public interface EpisodeMetadataDao {
     @Query("UPDATE episode_metadata SET useForHistory = 0")
     void clearAllHistory();
 
-    @Query("SELECT * FROM episode_metadata WHERE isActive = 1 ORDER BY audioFileName ASC")
+    @Query("SELECT * FROM episode_metadata WHERE isActive = 1 ORDER BY audioAbsolutePath ASC")
     LiveData<List<EpisodeMetadata>> getObservable();
 
-    @Query("SELECT * FROM episode_metadata WHERE isActive = 1 ORDER BY audioFileName ASC")
+    @Query("SELECT * FROM episode_metadata WHERE isActive = 1 ORDER BY audioAbsolutePath ASC")
     List<EpisodeMetadata> getActive();
 
     @Query("SELECT * FROM episode_metadata WHERE isActive = 1 AND contentLength = 0")

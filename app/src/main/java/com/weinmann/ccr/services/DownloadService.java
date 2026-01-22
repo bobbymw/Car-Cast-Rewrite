@@ -248,7 +248,7 @@ public class DownloadService extends Service {
                     appendLog("Failed to download: " + currentTitle);
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error downloading file " + episode.audioFileName(), e);
+                Log.e(TAG, "Error downloading file " + episode.audioAbsolutePath(), e);
                 appendLog("Error for " + currentTitle + ": " + e.getMessage());
             }
         }

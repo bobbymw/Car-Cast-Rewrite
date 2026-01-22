@@ -4,9 +4,7 @@ import com.weinmann.ccr.records.EpisodeMetadata;
 
 public interface IMediaPlayerService {
 
-    void play();
-
-    void pause();
+    void playPause(boolean shouldPlay);
 
     void setEpisodeIndex(int index, boolean shouldPlay);
 

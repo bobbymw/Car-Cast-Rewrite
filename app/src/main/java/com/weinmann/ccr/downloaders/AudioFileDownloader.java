@@ -1,20 +1,17 @@
 package com.weinmann.ccr.downloaders;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.os.Build;
-import android.provider.MediaStore;
+import android.os.Environment;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 
-import com.weinmann.ccr.CcrApplication;
 import com.weinmann.ccr.records.EpisodeMetadata;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Locale;
@@ -30,31 +27,17 @@ public class AudioFileDownloader extends BaseDownloader {
         this.context = context;
     }
 
-    private int getAudioDuration(Uri uri) throws IOException {
-        try (MediaMetadataRetriever retriever = new MediaMetadataRetriever()) {
-            retriever.setDataSource(context, uri);
-            String dur = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-            return Integer.parseInt(Objects.requireNonNull(dur)); // duration in ms
-        }
-    }
-
     public EpisodeMetadata download(@NonNull EpisodeMetadata originalEpisode) {
+        File audioFile;
 
-        String audioFileName = generateAudioFileName(originalEpisode);
-        ContentValues values = getContentValues(originalEpisode, audioFileName);
-
-        ContentResolver resolver = context.getContentResolver();
-
-        Uri uri = resolver.insert(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                values
-        );
-
-        if (uri == null) {
-            throw new IllegalStateException("Failed to create MediaStore entry");
+        try {
+            audioFile = generateAudioFile(originalEpisode);
+        } catch (IOException e) {
+            Log.e(TAG, "Error generating audio file", e);
+            return originalEpisode;
         }
 
-        try (OutputStream out = resolver.openOutputStream(uri)) {
+        try (OutputStream out  = new FileOutputStream(audioFile)) {
             fetchBinaryUrl(originalEpisode.enclosureUrl(), out);
             if (abortRequested.get()) return originalEpisode;
 
@@ -63,24 +46,16 @@ public class AudioFileDownloader extends BaseDownloader {
                 return originalEpisode;
             }
 
-            // Mark the file as complete
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ContentValues done = new ContentValues();
-                done.put(MediaStore.Audio.Media.IS_PENDING, 0);
-                resolver.update(uri, done, null, null);
-            }
-
         } catch (Exception e) {
             Log.e(TAG, "Error opening output stream", e);
             return originalEpisode;
         }
 
         try {
-            int duration = getAudioDuration(uri);
+            int duration = getAudioDuration(audioFile.getAbsolutePath());
             return EpisodeMetadata.createCopyForDownload(
                     originalEpisode,
-                    audioFileName,
-                    uri.toString(),
+                    audioFile.getAbsolutePath(),
                     currentBytes,
                     duration);
         } catch (IOException e) {
@@ -90,31 +65,32 @@ public class AudioFileDownloader extends BaseDownloader {
         return originalEpisode;
     }
 
-    @NonNull
-    private static ContentValues getContentValues(@NonNull EpisodeMetadata originalEpisode, String audioFileName) {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Audio.Media.DISPLAY_NAME, audioFileName);
-        values.put(MediaStore.Audio.Media.MIME_TYPE, originalEpisode.mimeType());
-        values.put(
-                MediaStore.Audio.Media.RELATIVE_PATH,
-                CcrApplication.EPISODES_DIR_PATH
-        );
-
-
-        // Android 10+ safe writing flag
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            values.put(MediaStore.Audio.Media.IS_PENDING, 1);
+    private static int getAudioDuration(String audioFileAbsolutePath) throws IOException {
+        try (MediaMetadataRetriever retriever = new MediaMetadataRetriever()) {
+            retriever.setDataSource(audioFileAbsolutePath);
+            String dur = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            return Integer.parseInt(Objects.requireNonNull(dur)); // duration in ms
         }
-        return values;
     }
 
     @NonNull
-    private static String generateAudioFileName(@NonNull EpisodeMetadata episode) {
+    private File generateAudioFile(@NonNull EpisodeMetadata episode) throws IOException {
         MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
         String extension = mimeTypeMap.getExtensionFromMimeType(episode.mimeType());
 
-        return String.format(Locale.getDefault(), "%d.%s",
+        String fileName = String.format(Locale.getDefault(), "%d.%s",
                 episode.id(),
                 extension);
+
+        File podcastsDir = context.getExternalFilesDir(Environment.DIRECTORY_PODCASTS);
+        if (podcastsDir == null) {
+            throw new IllegalStateException("External storage not available");
+        }
+
+        if (!podcastsDir.exists() && !podcastsDir.mkdirs()) {
+            throw new IOException("Failed to create podcasts directory");
+        }
+
+        return new File(podcastsDir, fileName);
     }
 }

@@ -2,17 +2,20 @@ package com.weinmann.ccr;
 
 import android.app.Activity;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.weinmann.ccr.db.AppDatabase;
 import com.weinmann.ccr.db.EpisodeMetadataDao;
 import com.weinmann.ccr.records.EpisodeMetadata;
 
+import java.io.File;
 import java.util.List;
 import java.util.function.Predicate;
 
 @SuppressWarnings("ClassCanBeRecord")
 public class EpisodeDeleter {
+    private static String TAG = "EpisodeDeleter";
     private final Activity activity;
 
     public EpisodeDeleter(Activity activity) {
@@ -29,9 +32,17 @@ public class EpisodeDeleter {
                 episodesToDelete.removeIf(e -> !filter.test(e));
 
                 for (EpisodeMetadata episode : episodesToDelete) {
-                    Uri uri = Uri.parse(episode.uriString());
-                    int rowsDeleted = activity.getContentResolver().delete(uri, null, null);
-                    assert rowsDeleted > 0;
+
+                    if (episode.audioAbsolutePath() != null) {
+                        try {
+                            File file = new File(episode.audioAbsolutePath());
+                            if (file.exists()) {
+                                file.delete();
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Could not delete audio file: " + episode.audioAbsolutePath(), e);
+                        }
+                    }
 
                     EpisodeMetadata updatedEpisode = EpisodeMetadata.createCopyForUpdate(
                             episode,

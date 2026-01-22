@@ -43,7 +43,7 @@ public class PodcastDownloader extends BaseDownloader {
     @NonNull
     private static EpisodeMetadata createCopyToAllowRedownloadingThisTimeButNotInTheFuture(EpisodeMetadata existing) {
         EpisodeMetadata item;
-        item = EpisodeMetadata.createCopyForDownload(existing, null, null, 0, 0);
+        item = EpisodeMetadata.createCopyForDownload(existing, null, 0, 0);
         return item;
     }
 
@@ -163,7 +163,6 @@ public class PodcastDownloader extends BaseDownloader {
                                     pubDateInstant.toEpochMilli(),
                                     null,
                                     enclosureMimeType,
-                                    null,
                                     0L,
                                     0,
                                     0,

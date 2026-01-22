@@ -41,13 +41,10 @@ public record EpisodeMetadata(
         long pubDateMillis,
 
         @Nullable
-        String audioFileName,
+        String audioAbsolutePath,
 
         @Nullable
         String mimeType,
-
-        @Nullable
-        String uriString,
 
         /* Bytes, if known */
         long contentLength,
@@ -63,10 +60,9 @@ public record EpisodeMetadata(
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     @NonNull
-    @Contract("_, _, _, _, _ -> new")
+    @Contract("_, _, _, _ -> new")
     public static EpisodeMetadata createCopyForDownload(EpisodeMetadata original,
-                                                        String audioFileName,
-                                                        String uri,
+                                                        String audioAbsolutePath,
                                                         long contentLength,
                                                         int duration) {
 return new EpisodeMetadata(
@@ -77,9 +73,8 @@ return new EpisodeMetadata(
                 original.description(),
                 original.enclosureUrl(),
                 original.pubDateMillis(),
-                audioFileName,
+                audioAbsolutePath,
                 original.mimeType(),
-                uri,
                 contentLength,
                 0,
                 duration,
@@ -103,9 +98,8 @@ return new EpisodeMetadata(
                 original.description(),
                 original.enclosureUrl(),
                 original.pubDateMillis(),
-                original.audioFileName(),
+                original.audioAbsolutePath(),
                 original.mimeType(),
-                original.uriString(),
                 original.contentLength(),
                 currentPos,
                 original.duration(),
