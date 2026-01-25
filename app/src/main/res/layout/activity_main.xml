@@ -23,16 +23,14 @@
     <TextView
         android:id="@+id/tvPubDate"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="8dp"
         android:textColor="#FFF"
         android:textSize="20sp"
-        android:textStyle="bold"
-        android:paddingBottom="8dp"
         android:text=""
+        app:layout_constraintTop_toBottomOf="@id/tvPodcast"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvPodcast" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/tvTitle"
@@ -42,9 +40,25 @@
         android:textColor="#FFF"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPubDate"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvPubDate" />
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:max="100"
+        android:progress="0"
+        android:scrollbarAlwaysDrawHorizontalTrack="true"
+        android:scrollbarStyle="insideOverlay"
+        android:secondaryProgress="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvEpisodeNumber"  />
 
     <ImageButton
         android:id="@+id/btnPrevious"
@@ -140,22 +154,6 @@
         app:layout_constraintStart_toEndOf="@id/tvEpisodeNumber"
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="Autofill,HardcodedText"  />
-
-    <SeekBar
-        android:id="@+id/seekBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="30dp"
-        android:clickable="true"
-        android:focusable="false"
-        android:max="100"
-        android:progress="0"
-        android:scrollbarAlwaysDrawHorizontalTrack="true"
-        android:scrollbarStyle="insideOverlay"
-        android:secondaryProgress="0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/tvEpisodeNumber"  />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

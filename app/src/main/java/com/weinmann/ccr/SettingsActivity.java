@@ -4,6 +4,7 @@ package com.weinmann.ccr;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Spinner playbackSpeedSpinner;
     private EditText rewindSecondsEdit;
     private EditText forwardSecondsEdit;
+    private CheckBox deleteAfterListeningCheckbox;
     private SpinnerItemAdapter<Float> adapter;
 
     @Override
@@ -28,6 +30,7 @@ public class SettingsActivity extends AppCompatActivity {
         playbackSpeedSpinner = findViewById(R.id.spinner_playback_speed);
         rewindSecondsEdit = findViewById(R.id.edit_rewind_seconds);
         forwardSecondsEdit = findViewById(R.id.edit_forward_seconds);
+        deleteAfterListeningCheckbox = findViewById(R.id.checkbox_delete_after_listening);
         Button saveButton = findViewById(R.id.button_save_settings);
 
 
@@ -59,6 +62,7 @@ public class SettingsActivity extends AppCompatActivity {
         maxDownloadsEdit.setText(String.valueOf(prefs.getInt(CcrApplication.KEY_MAX_DOWNLOADS, CcrApplication.DEFAULT_MAX_DOWNLOADS_PER_PODCAST)));
         rewindSecondsEdit.setText(String.valueOf(prefs.getInt(CcrApplication.KEY_REWIND_SECONDS, CcrApplication.DEFAULT_REWIND_SECONDS)));
         forwardSecondsEdit.setText(String.valueOf(prefs.getInt(CcrApplication.KEY_FORWARD_SECONDS, CcrApplication.DEFAULT_FORWARD_SECONDS)));
+        deleteAfterListeningCheckbox.setChecked(prefs.getBoolean(CcrApplication.KEY_DELETE_AFTER_LISTENING, false));
 
         float playbackSpeed = prefs.getFloat(CcrApplication.KEY_PLAYBACK_SPEED, CcrApplication.DEFAULT_PLAYBACK_SPEED);
         playbackSpeedSpinner.setSelection(adapter.getIndexByValue(playbackSpeed));
@@ -89,6 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
                     .putInt(CcrApplication.KEY_REWIND_SECONDS, rewindSecs)
                     .putInt(CcrApplication.KEY_FORWARD_SECONDS, forwardSecs)
                     .putFloat(CcrApplication.KEY_PLAYBACK_SPEED, playbackSpeed)
+                    .putBoolean(CcrApplication.KEY_DELETE_AFTER_LISTENING, deleteAfterListeningCheckbox.isChecked())
                     .apply();
 
             Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();

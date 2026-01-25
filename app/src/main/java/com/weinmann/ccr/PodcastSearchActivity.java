@@ -1,6 +1,7 @@
 package com.weinmann.ccr;
 
 import android.os.Bundle;
+import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 
 import androidx.annotation.NonNull;
@@ -46,6 +47,14 @@ public class PodcastSearchActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(v -> doSearch());
 
+        searchText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                doSearch();
+                return true;
+            }
+            return false;
+        });
+
         listView.setOnItemClickListener((parent, view, position, id) -> {
             ITunesSearchResponse.ITunesPodcastResult result =
                     (ITunesSearchResponse.ITunesPodcastResult) adapter.getItem(position);
@@ -66,7 +75,7 @@ public class PodcastSearchActivity extends AppCompatActivity {
             return;
         }
 
-        Call<ITunesSearchResponse> call = api.searchPodcasts(q, "episode", 50);
+        Call<ITunesSearchResponse> call = api.searchPodcasts(q, "podcast", 50);
 
         call.enqueue(new Callback<>() {
             @Override

@@ -79,7 +79,7 @@ public class EpisodesActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_delete_all_episodes) {
             episodeDeleter.deleteEpisodes(e -> true);
             return true;
-        } else if (item.getItemId() == R.id.action_delete_listened_to_episodes) {
+        } else if (item.getItemId() == R.id.action_delete_after_listening_episodes) {
             episodeDeleter.deleteEpisodes(EpisodeMetadata::isListenedTo);
             return true;
         } else if (item.getItemId() == R.id.action_clear_history) {
@@ -173,12 +173,10 @@ public class EpisodesActivity extends AppCompatActivity {
 
         dao.getObservable().observe(this, newEpisodes -> {
             episodes.clear();
-            if (newEpisodes != null && !newEpisodes.isEmpty()) {
-                episodes.addAll(newEpisodes);
-            }
+            episodes.addAll(newEpisodes);
             adapter.notifyDataSetChanged();
             Log.d(TAG, String.format(Locale.getDefault(), "Active episodes updated: %d",
-                    newEpisodes == null ? 0 : newEpisodes.size()));
+                    newEpisodes.size()));
         });
     }
 

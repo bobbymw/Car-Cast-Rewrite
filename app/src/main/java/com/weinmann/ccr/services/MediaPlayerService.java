@@ -17,6 +17,7 @@ import androidx.media3.exoplayer.ExoPlayer;
 
 import com.weinmann.ccr.CcrApplication;
 import com.weinmann.ccr.CurrentItemList;
+import com.weinmann.ccr.EpisodeDeleter;
 import com.weinmann.ccr.db.AppDatabase;
 import com.weinmann.ccr.db.EpisodeMetadataDao;
 import com.weinmann.ccr.records.EpisodeMetadata;
@@ -25,7 +26,6 @@ import java.io.File;
 import java.util.List;
 
 public class MediaPlayerService extends Service implements IMediaPlayerService {
-
     private static final String TAG = "MediaPlayerService";
 
     private final IBinder binder = new LocalBinder();
@@ -241,9 +241,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     private void setEpisodeById(long id, boolean shouldPlay) {
         int index = episodes.indexOf(e -> e.id() == id);
         if (index < 0) {
-            if (isPlaying()) {
-                killMediaPlayer();
-            }
+            killMediaPlayer();
             return;
         }
 
@@ -251,9 +249,6 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     }
 
     private void onLoadEpisodes() {
-        if (episodes.isEmpty()) {
-            return;
-        }
 
         boolean wasPlaying = isPlaying();
         SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
@@ -324,6 +319,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                     updateMediaSessionMetadata();
                 } else if (state == Player.STATE_ENDED) {
                     setEpisodeIndex(episodes.getCurrentIndex() + 1, true);
+                    handleDeleteAfterListening();
                 }
             }
 
@@ -344,6 +340,16 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         player.setMediaItem(mediaItem);
         player.prepare();
         player.seekTo(getCurrentEpisode().currentPos());
+    }
+
+    private void handleDeleteAfterListening() {
+        SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
+        boolean shouldDeleteAfterListening = prefs.getBoolean(CcrApplication.KEY_DELETE_AFTER_LISTENING, false);
+        
+        if (shouldDeleteAfterListening) {
+            EpisodeDeleter episodeDeleter = new EpisodeDeleter(this);
+            episodeDeleter.deleteEpisodes(EpisodeMetadata::isListenedTo);
+        }
     }
 
     private void initializeMediaSession() {

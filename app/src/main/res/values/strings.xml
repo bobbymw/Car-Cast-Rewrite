@@ -46,6 +46,6 @@
     <string name="podcast_search">Podcast Search:</string>
     <string name="example_search_text">example: npr</string>
     <string name="no_episodes_text">No episodes downloaded. Use \"Podcasts\" or \"Download episodes\" from the menu</string>
-    <string name="delete_listened_to">Delete listened to</string>
     <string name="delete_episodes">Delete episodes</string>
+    <string name="delete_after_listening">Delete episodes after listening</string>
 </resources>
