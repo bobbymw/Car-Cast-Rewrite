@@ -10,8 +10,10 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.Observer;
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 
@@ -30,15 +32,12 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
     private final IBinder binder = new LocalBinder();
     private final MediaNotifier mediaNotifier = new MediaNotifier(this);
-
-    private ExoPlayer player;
-
-    private MediaSessionCompat mediaSession;
-
-    private EpisodeMetadataDao episodeMetadataDao;
-
-    private Observer<List<EpisodeMetadata>> activeEpisodesObserver;
     private final CurrentItemList<EpisodeMetadata> episodes = new CurrentItemList<>();
+    private boolean shouldUpdateCurrentEpisode = false;
+    private ExoPlayer player;
+    private MediaSessionCompat mediaSession;
+    private EpisodeMetadataDao episodeMetadataDao;
+    private Observer<List<EpisodeMetadata>> activeEpisodesObserver;
 
     public class LocalBinder extends Binder {
         public MediaPlayerService getService() {
@@ -56,6 +55,19 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
         // Create observer only once
         activeEpisodesObserver = list -> {
+            for(EpisodeMetadata episode : list) {
+                if (episode.audioAbsolutePath() == null) {
+                    Log.e(TAG, "episode id " + episode.id() + "|" + episode.title() + " has no audio path");
+                } else if (!new File(episode.audioAbsolutePath()).exists()) {
+                    Log.e(TAG, "episode id " + episode.id() + " " + episode.audioAbsolutePath() + " does not exist");
+                }
+            }
+            list.removeIf(episode ->
+                    (episode.audioAbsolutePath() == null) ||
+                            !new File(episode.audioAbsolutePath()).exists());
+
+            if (episodes.equals(list)) return;
+
             episodes.clear();
             episodes.addAll(list);
             onLoadEpisodes();
@@ -187,6 +199,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             mediaNotifier.updateNotification(isPlaying(), mediaSession.getSessionToken());
         }
 
+        shouldUpdateCurrentEpisode = true;
         updateAndSaveCurrentEpisodePosition(position);
         playPause(wasPlaying);
     }
@@ -230,6 +243,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         float playbackSpeed = getPlaybackSpeed();
         player.setPlaybackSpeed(playbackSpeed);
         player.play();
+        shouldUpdateCurrentEpisode = true;
     }
 
     private void pause() {
@@ -253,10 +267,6 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         boolean wasPlaying = isPlaying();
         SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
         long lastEpisodeId = prefs.getLong(CcrApplication.KEY_LAST_EPISODE_ID, 0L);
-
-        episodes.removeIf(episode ->
-                (episode.audioAbsolutePath() == null) ||
-                !new File(episode.audioAbsolutePath()).exists());
 
         setEpisodeById(lastEpisodeId, wasPlaying);
     }
@@ -318,7 +328,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 if (state == Player.STATE_READY) {
                     updateMediaSessionMetadata();
                 } else if (state == Player.STATE_ENDED) {
-                    setEpisodeIndex(episodes.getCurrentIndex() + 1, true);
+                    boolean shouldPlay = episodes.getCurrentIndex() < episodes.size() - 1;
+                    setEpisodeIndex(episodes.getCurrentIndex() + 1, shouldPlay);
                     handleDeleteAfterListening();
                 }
             }
@@ -327,6 +338,11 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             public void onIsPlayingChanged(boolean isPlaying) {
                 updatePlaybackState();
                 mediaNotifier.updateNotification(isPlaying, mediaSession.getSessionToken());
+            }
+
+            @Override
+            public void onPlayerError(@NonNull PlaybackException error) {
+                Log.e(TAG, "ExoPlayer error", error);
             }
         });
 
@@ -338,8 +354,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                         .build();
 
         player.setMediaItem(mediaItem);
-        player.prepare();
         player.seekTo(getCurrentEpisode().currentPos());
+        player.prepare();
     }
 
     private void handleDeleteAfterListening() {
@@ -367,15 +383,17 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     }
 
     private void updateAndSaveCurrentEpisodePosition(int position) {
-        if (getCurrentEpisode() == null) {
+        if (getCurrentEpisode() == null || !shouldUpdateCurrentEpisode) {
             return;
         }
+
         EpisodeMetadata updatedEpisode = EpisodeMetadata.createCopyForUpdate(
                 getCurrentEpisode(),
                 position,
                 true);
 
         episodes.replaceCurrentItem(updatedEpisode);
+        shouldUpdateCurrentEpisode = false;
 
         AppDatabase.getExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(getApplicationContext());
