@@ -3,7 +3,9 @@ package com.weinmann.ccr.services;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -11,7 +13,10 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
+import androidx.media3.common.AudioAttributes;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -36,6 +41,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     private boolean shouldUpdateCurrentEpisode = false;
     private ExoPlayer player;
     private MediaSessionCompat mediaSession;
+    private AudioManager audioManager;
+    private AudioManager.OnModeChangedListener audioModeListener;
     private EpisodeMetadataDao episodeMetadataDao;
     private Observer<List<EpisodeMetadata>> activeEpisodesObserver;
 
@@ -50,6 +57,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         super.onCreate();
 
         initializeMediaSession();
+        registerCallInterruptionListener();
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         episodeMetadataDao = db.episodeMetadataDao();
 
@@ -128,12 +136,6 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
             prefs.edit().putLong(CcrApplication.KEY_LAST_EPISODE_ID, getCurrentEpisode().id()).apply();
             updateMediaSessionMetadata();
-
-            if (shouldPlay) {
-                if (getCurrentEpisode().currentPos() >= getCurrentEpisode().duration()) {
-                    updateAndSaveCurrentEpisodePosition(0); // because we specifically want to play this episode again
-                }
-            }
 
             playPause(shouldPlay);
         }
@@ -228,10 +230,34 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         }
 
         killMediaPlayer();
+        unregisterCallInterruptionListener();
 
         if (mediaSession != null) {
             mediaSession.setActive(false);
             mediaSession.release();
+        }
+    }
+
+    private void registerCallInterruptionListener() {
+        audioManager = getSystemService(AudioManager.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioModeListener = mode -> {
+                if (mode == AudioManager.MODE_RINGTONE
+                        || mode == AudioManager.MODE_IN_CALL
+                        || mode == AudioManager.MODE_IN_COMMUNICATION) {
+                    pause();
+                }
+            };
+            audioManager.addOnModeChangedListener(
+                    ContextCompat.getMainExecutor(this), audioModeListener);
+        }
+    }
+
+    private void unregisterCallInterruptionListener() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && audioManager != null && audioModeListener != null) {
+            audioManager.removeOnModeChangedListener(audioModeListener);
+            audioModeListener = null;
         }
     }
 
@@ -320,7 +346,14 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             return;
         }
 
-        player = new ExoPlayer.Builder(this).build();
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
+                .build();
+
+        player = new ExoPlayer.Builder(this)
+                .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+                .build();
 
         player.addListener(new Player.Listener() {
             @Override
@@ -328,6 +361,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 if (state == Player.STATE_READY) {
                     updateMediaSessionMetadata();
                 } else if (state == Player.STATE_ENDED) {
+                    updateAndSaveCurrentEpisodePosition(0);
                     boolean shouldPlay = episodes.getCurrentIndex() < episodes.size() - 1;
                     setEpisodeIndex(episodes.getCurrentIndex() + 1, shouldPlay);
                     handleDeleteAfterListening();
@@ -390,7 +424,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         EpisodeMetadata updatedEpisode = EpisodeMetadata.createCopyForUpdate(
                 getCurrentEpisode(),
                 position,
-                true);
+                getCurrentEpisode().isActive());
 
         episodes.replaceCurrentItem(updatedEpisode);
         shouldUpdateCurrentEpisode = false;

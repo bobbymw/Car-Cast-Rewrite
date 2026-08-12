@@ -5,9 +5,6 @@ import java.util.List;
 
 public class ITunesSearchResponse {
 
-    @SerializedName("resultCount")
-    public int resultCount;
-
     @SerializedName("results")
     public List<ITunesPodcastResult> results;
 
@@ -15,7 +12,7 @@ public class ITunesSearchResponse {
         @SerializedName("collectionName")
         public String title;
 
-        @SerializedName("podcastUrl")
-        public String podcastUrl;
+        @SerializedName("feedUrl")
+        public String feedUrl;
     }
 }
