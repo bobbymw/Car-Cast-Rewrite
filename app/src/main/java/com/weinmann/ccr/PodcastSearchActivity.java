@@ -59,12 +59,12 @@ public class PodcastSearchActivity extends AppCompatActivity {
             ITunesSearchResponse.ITunesPodcastResult result =
                     (ITunesSearchResponse.ITunesPodcastResult) adapter.getItem(position);
 
-            if (result.podcastUrl == null) {
+            if (result.feedUrl == null) {
                 Toast.makeText(this, "No podcast URL for this podcast.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            savePodcast(result.title, result.podcastUrl);
+            savePodcast(result.title, result.feedUrl);
         });
     }
 

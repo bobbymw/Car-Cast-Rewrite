@@ -40,7 +40,7 @@ public class PodcastSearchAdapter extends BaseAdapter {
 
         ITunesPodcastResult item = items.get(i);
         title.setText(item.title);
-        url.setText(item.podcastUrl);
+        url.setText(item.feedUrl);
 
         return v;
     }
