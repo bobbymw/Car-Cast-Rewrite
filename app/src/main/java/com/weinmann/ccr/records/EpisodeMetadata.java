@@ -65,31 +65,30 @@ public record EpisodeMetadata(
                                                         String audioAbsolutePath,
                                                         long contentLength,
                                                         int duration) {
-return new EpisodeMetadata(
-                original.id(),
-                original.podcastId(),
-                original.podcastName(),
-                original.title(),
-                original.description(),
-                original.enclosureUrl(),
-                original.pubDateMillis(),
-                audioAbsolutePath,
-                original.mimeType(),
-                contentLength,
-                0,
-                duration,
-                true,
-                false,
-                true
+        return new EpisodeMetadata(
+                        original.id(),
+                        original.podcastId(),
+                        original.podcastName(),
+                        original.title(),
+                        original.description(),
+                        original.enclosureUrl(),
+                        original.pubDateMillis(),
+                        audioAbsolutePath,
+                        original.mimeType(),
+                        contentLength,
+                        0,
+                        duration,
+                        true,
+                        false,
+                        true
         );
     }
 
-    @Contract("_, _, _ -> new")
+    @Contract("_, _ -> new")
     @NonNull
 
     public static EpisodeMetadata createCopyForUpdate(EpisodeMetadata original,
-                                                      int currentPos,
-                                                      boolean isActive) {
+                                                      int currentPos) {
         return new EpisodeMetadata(
                 original.id(),
                 original.podcastId(),
@@ -103,7 +102,7 @@ return new EpisodeMetadata(
                 original.contentLength(),
                 currentPos,
                 original.duration(),
-                isActive,
+                original.isActive(),
                 original.shouldSetListenedTo(currentPos),
                 true
         );

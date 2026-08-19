@@ -29,35 +29,39 @@ public class EpisodeDeleter {
             AppDatabase db = AppDatabase.getInstance(context);
             EpisodeMetadataDao dao = db.episodeMetadataDao();
             List<EpisodeMetadata> episodesToDelete = dao.getActive();
+            if (episodesToDelete == null || episodesToDelete.isEmpty()) {
+                return;
+            }
 
-            if (episodesToDelete != null) {
-                episodesToDelete.removeIf(e -> !filter.test(e));
+            episodesToDelete.removeIf(e -> !filter.test(e));
+            if (episodesToDelete.isEmpty()) {
+                return;
+            }
 
+            db.runInTransaction(() -> {
                 for (EpisodeMetadata episode : episodesToDelete) {
-                    EpisodeMetadata updatedEpisode = EpisodeMetadata.createCopyForUpdate(
-                            episode,
-                            0,
-                            false);
-                    dao.update(updatedEpisode);
+                    dao.deactivateById(episode.id());
+                }
+            });
 
-
-                    if (episode.audioAbsolutePath() != null) {
-                        try {
-                            Path path = Paths.get(episode.audioAbsolutePath());
-                            Files.delete(path);
-                        } catch (Exception e) {
-                            Log.e(TAG, "Could not delete audio file: " + episode.audioAbsolutePath(), e);
-                        }
+            for (EpisodeMetadata episode : episodesToDelete) {
+                if (episode.audioAbsolutePath() != null) {
+                    try {
+                        Path path = Paths.get(episode.audioAbsolutePath());
+                        Files.delete(path);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Could not delete audio file: " + episode.audioAbsolutePath(), e);
                     }
                 }
+            }
 
-                if (context instanceof Activity activity) {
-                    activity.runOnUiThread(() -> Toast.makeText(
-                            activity,
-                            episodesToDelete.size() + " episodes deleted",
-                            Toast.LENGTH_LONG
-                    ).show());
-                }
+            int deletedCount = episodesToDelete.size();
+            if (context instanceof Activity activity) {
+                activity.runOnUiThread(() -> Toast.makeText(
+                        activity,
+                        deletedCount + " episodes deleted",
+                        Toast.LENGTH_LONG
+                ).show());
             }
         });
     }

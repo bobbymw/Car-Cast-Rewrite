@@ -38,8 +38,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     private final IBinder binder = new LocalBinder();
     private final MediaNotifier mediaNotifier = new MediaNotifier(this);
     private final CurrentItemList<EpisodeMetadata> episodes = new CurrentItemList<>();
-    private boolean shouldUpdateCurrentEpisode = false;
     private ExoPlayer player;
+    private EpisodeMetadata currentEpisode;
     private MediaSessionCompat mediaSession;
     private AudioManager audioManager;
     private AudioManager.OnModeChangedListener audioModeListener;
@@ -122,20 +122,22 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
     @Override
     public void setEpisodeIndex(int index, boolean shouldPlay) {
-        if (index == getCurrentEpisodeIndex()) {
-            playPause(shouldPlay);
-            return;
+        if (index != getCurrentEpisodeIndex() || null == getCurrentEpisode()) {
+            killMediaPlayer();
         }
 
-        killMediaPlayer();
-        assert (player == null);
-
         episodes.setCurrentIndex(index);
+        currentEpisode = episodes.getCurrentItem();
 
         if (getCurrentEpisode() != null) {
             SharedPreferences prefs = getSharedPreferences(CcrApplication.PREFS_NAME, MODE_PRIVATE);
             prefs.edit().putLong(CcrApplication.KEY_LAST_EPISODE_ID, getCurrentEpisode().id()).apply();
-            updateMediaSessionMetadata();
+
+            initializePlayer();
+            updatePlaybackState();
+            mediaNotifier.updateNotification(
+                    false,
+                    mediaSession.getSessionToken());
 
             playPause(shouldPlay);
         }
@@ -200,15 +202,13 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
             updatePlaybackState();
             mediaNotifier.updateNotification(isPlaying(), mediaSession.getSessionToken());
         }
-
-        shouldUpdateCurrentEpisode = true;
         updateAndSaveCurrentEpisodePosition(position);
         playPause(wasPlaying);
     }
 
     @Override
     public EpisodeMetadata getCurrentEpisode() {
-        return episodes.getCurrentItem();
+        return currentEpisode;
     }
 
     @Override
@@ -269,7 +269,6 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
         float playbackSpeed = getPlaybackSpeed();
         player.setPlaybackSpeed(playbackSpeed);
         player.play();
-        shouldUpdateCurrentEpisode = true;
     }
 
     private void pause() {
@@ -280,11 +279,12 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
     private void setEpisodeById(long id, boolean shouldPlay) {
         int index = episodes.indexOf(e -> e.id() == id);
-        if (index < 0) {
-            killMediaPlayer();
-            return;
-        }
 
+        boolean episodeWasDeleted = index < 0;
+        if (episodeWasDeleted) {
+            currentEpisode = null;
+            shouldPlay = false;
+        }
         setEpisodeIndex(index, shouldPlay);
     }
 
@@ -361,7 +361,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 if (state == Player.STATE_READY) {
                     updateMediaSessionMetadata();
                 } else if (state == Player.STATE_ENDED) {
-                    updateAndSaveCurrentEpisodePosition(0);
+                    updateAndSaveCurrentEpisodePosition(getCurrentPosition()); // update with end
+                    updateAndSaveCurrentEpisodePosition(0); // update and reset to beginning
                     boolean shouldPlay = episodes.getCurrentIndex() < episodes.size() - 1;
                     setEpisodeIndex(episodes.getCurrentIndex() + 1, shouldPlay);
                     handleDeleteAfterListening();
@@ -370,6 +371,9 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
 
             @Override
             public void onIsPlayingChanged(boolean isPlaying) {
+                if (!isPlaying) {
+                    updateAndSaveCurrentEpisodePosition(getCurrentPosition());
+                }
                 updatePlaybackState();
                 mediaNotifier.updateNotification(isPlaying, mediaSession.getSessionToken());
             }
@@ -417,21 +421,22 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
     }
 
     private void updateAndSaveCurrentEpisodePosition(int position) {
-        if (getCurrentEpisode() == null || !shouldUpdateCurrentEpisode) {
+        if (getCurrentEpisode() == null || position == getCurrentEpisode().currentPos()) {
             return;
         }
 
         EpisodeMetadata updatedEpisode = EpisodeMetadata.createCopyForUpdate(
                 getCurrentEpisode(),
-                position,
-                getCurrentEpisode().isActive());
+                position);
 
         episodes.replaceCurrentItem(updatedEpisode);
-        shouldUpdateCurrentEpisode = false;
 
         AppDatabase.getExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-            db.episodeMetadataDao().update(updatedEpisode);
+            db.episodeMetadataDao().updatePlaybackPosition(
+                    updatedEpisode.id(),
+                    updatedEpisode.currentPos(),
+                    updatedEpisode.isListenedTo());
         });
     }
 

@@ -28,6 +28,12 @@ public interface EpisodeMetadataDao {
     @Query("SELECT * FROM episode_metadata WHERE isActive = 1 AND contentLength = 0")
     List<EpisodeMetadata> getToDownload();
 
+    @Query("UPDATE episode_metadata SET currentPos = :currentPos, isListenedTo = :isListenedTo WHERE id = :id")
+    void updatePlaybackPosition(long id, int currentPos, boolean isListenedTo);
+
+    @Query("UPDATE episode_metadata SET isActive = 0, currentPos = 0 WHERE id = :id")
+    void deactivateById(long id);
+
     @Update
     void update(EpisodeMetadata entity);
 }
