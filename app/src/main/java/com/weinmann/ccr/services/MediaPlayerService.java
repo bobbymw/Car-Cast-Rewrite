@@ -361,8 +361,8 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 if (state == Player.STATE_READY) {
                     updateMediaSessionMetadata();
                 } else if (state == Player.STATE_ENDED) {
-                    updateAndSaveCurrentEpisodePosition(getCurrentPosition()); // update with end
-                    updateAndSaveCurrentEpisodePosition(0); // update and reset to beginning
+                    killMediaPlayer();
+                    seekTo(0); // reset to beginning, in case the user comes back to
                     boolean shouldPlay = episodes.getCurrentIndex() < episodes.size() - 1;
                     setEpisodeIndex(episodes.getCurrentIndex() + 1, shouldPlay);
                     handleDeleteAfterListening();
@@ -430,6 +430,7 @@ public class MediaPlayerService extends Service implements IMediaPlayerService {
                 position);
 
         episodes.replaceCurrentItem(updatedEpisode);
+        currentEpisode = updatedEpisode;
 
         AppDatabase.getExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(getApplicationContext());
